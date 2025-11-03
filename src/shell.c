@@ -1,9 +1,24 @@
 #include "shell.h"
+#include <readline/readline.h>
+#include <readline/history.h>
 
 static char* history[HISTORY_SIZE];
 static int history_count = 0;
 
+char* read_cmd(char* prompt, FILE* fp) {
+    char* input = readline(prompt);
 
+    if (input == NULL) {  // Ctrl+D
+        return NULL;
+    }
+
+    if (strlen(input) > 0) {
+        add_history(input);  // Adds to Readline's built-in history
+    }
+
+    return input;
+}
+/*
 char* read_cmd(char* prompt, FILE* fp) {
     printf("%s", prompt);
     char* cmdline = (char*) malloc(sizeof(char) * MAX_LEN);
@@ -21,7 +36,7 @@ char* read_cmd(char* prompt, FILE* fp) {
     
     cmdline[pos] = '\0';
     return cmdline;
-}
+}*/
 
 char** tokenize(char* cmdline) {
     // Edge case: empty command line

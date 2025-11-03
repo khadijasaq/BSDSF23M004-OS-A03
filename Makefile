@@ -1,5 +1,6 @@
 # Compiler and Flags
 CC = gcc
+LDFLAGS = -lreadline
 CFLAGS = -Iinclude -Wall
 SRC = $(wildcard src/*.c)
 OBJ = $(patsubst src/%.c, obj/%.o, $(SRC))
@@ -8,9 +9,10 @@ BIN = bin/myshell
 # Default target
 all: $(BIN)
 
-# Linking step
 $(BIN): $(OBJ)
-	$(CC) $(OBJ) -o $(BIN)
+	$(CC) $(OBJ) -o $(BIN) $(LDFLAGS)
+
+# Linking step
 
 # Compilation step for each .c → .o
 obj/%.o: src/%.c
