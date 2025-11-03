@@ -20,4 +20,11 @@ char** tokenize(char* cmdline);
 int execute(char** arglist);
 int handle_builtin(char **arglist);
 
+
+#define HISTORY_SIZE 20
+
+void add_to_history(const char *cmd);
+void show_history();
+char* get_history_command(int index);
+
 #endif // SHELL_H
