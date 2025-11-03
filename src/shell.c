@@ -39,10 +39,8 @@ char* read_cmd(char* prompt, FILE* fp) {
 }*/
 
 char** tokenize(char* cmdline) {
-    // Edge case: empty command line
-    if (cmdline == NULL || cmdline[0] == '\0' || cmdline[0] == '\n') {
+    if (cmdline == NULL || cmdline[0] == '\0' || cmdline[0] == '\n')
         return NULL;
-    }
 
     char** arglist = (char**)malloc(sizeof(char*) * (MAXARGS + 1));
     for (int i = 0; i < MAXARGS + 1; i++) {
@@ -50,28 +48,17 @@ char** tokenize(char* cmdline) {
         bzero(arglist[i], ARGLEN);
     }
 
-    char* cp = cmdline;
-    char* start;
-    int len;
+    char* token = strtok(cmdline, " \t");
     int argnum = 0;
 
-    while (*cp != '\0' && argnum < MAXARGS) {
-        while (*cp == ' ' || *cp == '\t') cp++; // Skip leading whitespace
-        
-        if (*cp == '\0') break; // Line was only whitespace
-
-        start = cp;
-        len = 1;
-        while (*++cp != '\0' && !(*cp == ' ' || *cp == '\t')) {
-            len++;
-        }
-        strncpy(arglist[argnum], start, len);
-        arglist[argnum][len] = '\0';
+    while (token != NULL && argnum < MAXARGS) {
+        strncpy(arglist[argnum], token, ARGLEN - 1);
         argnum++;
+        token = strtok(NULL, " \t");
     }
 
-    if (argnum == 0) { // No arguments were parsed
-        for(int i = 0; i < MAXARGS + 1; i++) free(arglist[i]);
+    if (argnum == 0) {
+        for (int i = 0; i < MAXARGS + 1; i++) free(arglist[i]);
         free(arglist);
         return NULL;
     }
@@ -79,6 +66,7 @@ char** tokenize(char* cmdline) {
     arglist[argnum] = NULL;
     return arglist;
 }
+
 int handle_builtin(char **arglist) {
     if (arglist == NULL || arglist[0] == NULL)
         return 0;

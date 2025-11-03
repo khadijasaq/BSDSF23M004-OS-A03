@@ -1,0 +1,8 @@
+bin
+files.txt
+include
+LICENSE
+Makefile
+obj
+README.md
+src
