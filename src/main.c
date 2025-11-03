@@ -5,8 +5,11 @@ int main() {
     char** arglist;
 
     while ((cmdline = read_cmd(PROMPT, stdin)) != NULL) {
-        if ((arglist = tokenize(cmdline)) != NULL) {
-            execute(arglist);
+	if ((arglist = tokenize(cmdline)) != NULL) {
+    if (!handle_builtin(arglist)) {   // Only run external if not built-in
+        execute(arglist);
+    }
+
 
             // Free the memory allocated by tokenize()
             for (int i = 0; arglist[i] != NULL; i++) {
