@@ -1,6 +1,9 @@
 #include "shell.h"
 #include <readline/readline.h>
 #include <readline/history.h>
+#define MAX_JOBS 20
+static pid_t bg_jobs[MAX_JOBS];
+static int job_count = 0;
 
 static char* history[HISTORY_SIZE];
 static int history_count = 0;
@@ -86,7 +89,6 @@ int handle_builtin(char **arglist) {
         }
         return 1;
     }
-
     // help
     else if (strcmp(arglist[0], "help") == 0) {
         printf("Built-in commands:\n");
@@ -98,13 +100,16 @@ int handle_builtin(char **arglist) {
     }
 
     // jobs
-    else if (strcmp(arglist[0], "jobs") == 0) {
-        printf("Job control not yet implemented.\n");
-        return 1;}
-	else if (strcmp(arglist[0], "history") == 0) {
-    show_history();
+	else if (strcmp(arglist[0], "jobs") == 0) {
+    printf("Active background jobs:\n");
+    for (int i = 0; i < job_count; i++) {
+        if (bg_jobs[i] > 0) {
+            printf("[%d] PID %d\n", i + 1, bg_jobs[i]);
+        }
+    }
     return 1;
 }
+
 
     
 
