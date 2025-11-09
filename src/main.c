@@ -4,7 +4,7 @@
 
 #define MAX_CMDS 10
 #define MAX_JOBS 20
-int run_command(char *cmdline) {
+/*int run_command(char *cmdline) {
     char **arglist = tokenize(cmdline);
     if (arglist == NULL) return 1; // Treat empty as failure
 
@@ -20,7 +20,101 @@ int run_command(char *cmdline) {
         free(arglist);
         return WEXITSTATUS(status);
     }
+}*/
+void expand_env_vars(char *cmdline) {
+    char temp[1024] = "";
+    for (int i = 0; cmdline[i] != '\0';) {
+        if (cmdline[i] == '$') {
+            i++;
+            char var[128];
+            int j = 0;
+
+            // capture variable name
+            while ((cmdline[i] >= 'A' && cmdline[i] <= 'Z') ||
+                   (cmdline[i] >= 'a' && cmdline[i] <= 'z') ||
+                   (cmdline[i] >= '0' && cmdline[i] <= '9') ||
+                   cmdline[i] == '_') {
+                var[j++] = cmdline[i++];
+            }
+            var[j] = '\0';
+
+            const char *val = getenv(var);
+            if (val)
+                strcat(temp, val);   // substitute value
+        } else {
+            strncat(temp, &cmdline[i], 1);
+            i++;
+        }
+    }
+    strcpy(cmdline, temp);
 }
+
+          void execute_lines(const char *body) {
+    if (body == NULL || strlen(body) == 0)
+        return;
+
+    char *copy = strdup(body);
+    if (!copy) return;
+
+    char *cmd = strtok(copy, "\n");
+    while (cmd != NULL) {
+        if (strlen(cmd) > 0) {
+            // skip pure whitespace
+            while (*cmd == ' ' || *cmd == '\t') cmd++;
+            if (strlen(cmd) == 0) {
+                cmd = strtok(NULL, "\n");
+                continue;
+            }
+
+            char **arglist = tokenize(cmd);
+            if (arglist) {
+                if (!handle_builtin(arglist)) {
+                    pid_t pid = fork();
+                    if (pid == 0) {
+                        execute(arglist);
+                        exit(0);
+                    } else {
+                        waitpid(pid, NULL, 0);
+                    }
+                }
+                for (int j = 0; arglist[j] != NULL; j++)
+                    free(arglist[j]);
+                free(arglist);
+            }
+        }
+        cmd = strtok(NULL, "\n");
+    }
+    free(copy);
+}
+ 
+int evaluate_condition(const char *expr) {
+    // Example: "[ $i -le 3 ]"
+    char var[64], op[4];
+    int val, var_val;
+    sscanf(expr, "[ $%63s %3s %d ]", var, op, &val);
+    var_val = atoi(getenv(var)); // get current variable value
+    if (strcmp(op, "-le") == 0) return var_val <= val;
+    if (strcmp(op, "-lt") == 0) return var_val < val;
+    if (strcmp(op, "-eq") == 0) return var_val == val;
+    return 0;
+}
+
+int run_command(char *cmdline) {
+    if (cmdline == NULL || strlen(cmdline) == 0)
+        return 1;
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        execlp("bash", "bash", "-c", cmdline, (char *)NULL);
+        perror("execlp failed");
+        exit(1);
+    } else {
+        int status;
+        waitpid(pid, &status, 0);
+        return WEXITSTATUS(status);
+    }
+}
+
 
 // declare globals so main and shell share them
 pid_t bg_jobs[MAX_JOBS];
@@ -73,6 +167,36 @@ int main() {
     continue;
 }
 
+
+if (strncmp(cmdline, "while ", 6) == 0) {
+    char condition[512];
+    sscanf(cmdline + 6, "%[^\n]", condition);
+
+    // read loop body
+    char body[2048] = "";
+    char line[MAX_LEN];
+    while (1) {
+        printf("while> ");
+        if (!fgets(line, sizeof(line), stdin)) break;
+        line[strcspn(line, "\n")] = '\0';
+        if (strcmp(line, "do") == 0) continue;
+        if (strcmp(line, "done") == 0) break;
+        strcat(body, line);
+        strcat(body, "\n");
+    }
+
+    // interpret it internally
+    while (evaluate_condition(condition)) {
+        execute_lines(body);
+    }
+
+    free(cmdline);
+    continue;
+}
+  
+
+
+
         // split multiple commands separated by ';'
         int cmd_count = 0;
         char *token = strtok(cmdline, ";");
@@ -99,7 +223,7 @@ int main() {
                 background = 1;
                 trim[strlen(trim) - 1] = '\0';   // remove '&'
             }
-
+expand_env_vars(trim);
             arglist = tokenize(trim);
             if (arglist == NULL) continue;
 
