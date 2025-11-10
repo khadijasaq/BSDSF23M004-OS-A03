@@ -90,13 +90,11 @@ int handle_builtin(char **arglist) {
         return 1;
     }
     // help
-    else if (strcmp(arglist[0], "help") == 0) {
-        printf("Built-in commands:\n");
-        printf("  cd <dir>   - Change directory\n");
-        printf("  help       - Show this help message\n");
-        printf("  jobs       - Show background jobs (not yet implemented)\n");
-        printf("  exit       - Exit the shell\n");
-        return 1;
+    else if (strcmp(args[0], "help") == 0) {
+    printf("Available built-ins:\n");
+    printf("cd, exit, history, set\n"); // added 'set'
+    return 1;
+
     }
 
     // jobs
